@@ -2,10 +2,20 @@
 ===============================================================================
 DDL Script: Create Silver Tables
 ===============================================================================
-Script Purpose:
-    This script creates tables in the 'silver' schema, dropping existing tables 
-    if they already exist.
-	  Run this script to re-define the DDL structure of 'bronze' Tables
+Purpose:
+    This script creates tables in the 'silver' schema.
+
+    The Silver layer stores cleansed and standardized data transformed from
+    the Bronze layer. These tables are used as the reliable foundation for
+    building the Gold analytical model.
+
+Actions:
+    - Drops existing Silver tables if they already exist.
+    - Recreates Silver tables with standardized data types.
+    - Adds dwh_create_date to track when records are loaded into Silver.
+
+Run this script before executing:
+    EXEC silver.load_silver;
 ===============================================================================
 */
 
