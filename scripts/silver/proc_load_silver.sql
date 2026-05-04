@@ -1,20 +1,27 @@
 /*
 ===============================================================================
-Stored Procedure: Load Silver Layer (Bronze -> Silver)
+Stored Procedure: Load Silver Layer
 ===============================================================================
-Script Purpose:
-    This stored procedure performs the ETL (Extract, Transform, Load) process to 
-    populate the 'silver' schema tables from the 'bronze' schema.
-	Actions Performed:
-		- Truncates Silver tables.
-		- Inserts transformed and cleansed data from Bronze into Silver tables.
-		
-Parameters:
-    None. 
-	  This stored procedure does not accept any parameters or return any values.
+Purpose:
+    This stored procedure loads cleansed and standardized data into the Silver
+    schema by transforming records from the Bronze schema.
 
-Usage Example:
-    EXEC Silver.load_silver;
+    It applies data cleaning rules such as:
+    - Removing duplicate customer records.
+    - Trimming text fields.
+    - Standardizing gender and marital status values.
+    - Splitting product keys into category and product identifiers.
+    - Handling missing or invalid sales amounts.
+    - Converting raw date values into SQL DATE format.
+    - Standardizing ERP country and demographic values.
+
+Actions:
+    - Truncates Silver tables before each load.
+    - Inserts transformed CRM and ERP data from Bronze into Silver.
+    - Prints load duration for each table.
+
+Usage:
+    EXEC silver.load_silver;
 ===============================================================================
 */
 
@@ -111,7 +118,7 @@ BEGIN
         PRINT '>> Load Duration: ' + CAST(DATEDIFF(SECOND, @start_time, @end_time) AS NVARCHAR) + ' seconds';
         PRINT '>> -------------';
 
-        -- Loading crm_sales_details
+        -- Loading silver.crm_sales_details
         SET @start_time = GETDATE();
 		PRINT '>> Truncating Table: silver.crm_sales_details';
 		TRUNCATE TABLE silver.crm_sales_details;
@@ -159,7 +166,11 @@ BEGIN
         PRINT '>> Load Duration: ' + CAST(DATEDIFF(SECOND, @start_time, @end_time) AS NVARCHAR) + ' seconds';
         PRINT '>> -------------';
 
-        -- Loading erp_cust_az12
+		PRINT '------------------------------------------------';
+		PRINT 'Loading ERP Tables';
+		PRINT '------------------------------------------------';
+
+        -- Loading silver.erp_cust_az12
         SET @start_time = GETDATE();
 		PRINT '>> Truncating Table: silver.erp_cust_az12';
 		TRUNCATE TABLE silver.erp_cust_az12;
@@ -188,11 +199,7 @@ BEGIN
         PRINT '>> Load Duration: ' + CAST(DATEDIFF(SECOND, @start_time, @end_time) AS NVARCHAR) + ' seconds';
         PRINT '>> -------------';
 
-		PRINT '------------------------------------------------';
-		PRINT 'Loading ERP Tables';
-		PRINT '------------------------------------------------';
-
-        -- Loading erp_loc_a101
+        -- Loading silver.erp_loc_a101
         SET @start_time = GETDATE();
 		PRINT '>> Truncating Table: silver.erp_loc_a101';
 		TRUNCATE TABLE silver.erp_loc_a101;
@@ -214,7 +221,7 @@ BEGIN
         PRINT '>> Load Duration: ' + CAST(DATEDIFF(SECOND, @start_time, @end_time) AS NVARCHAR) + ' seconds';
         PRINT '>> -------------';
 		
-		-- Loading erp_px_cat_g1v2
+		-- Loading silver.erp_px_cat_g1v2
 		SET @start_time = GETDATE();
 		PRINT '>> Truncating Table: silver.erp_px_cat_g1v2';
 		TRUNCATE TABLE silver.erp_px_cat_g1v2;
@@ -236,18 +243,18 @@ BEGIN
         PRINT '>> -------------';
 
 		SET @batch_end_time = GETDATE();
-		PRINT '=========================================='
+		PRINT '==========================================';
 		PRINT 'Loading Silver Layer is Completed';
         PRINT '   - Total Load Duration: ' + CAST(DATEDIFF(SECOND, @batch_start_time, @batch_end_time) AS NVARCHAR) + ' seconds';
-		PRINT '=========================================='
+		PRINT '==========================================';
 		
 	END TRY
 	BEGIN CATCH
-		PRINT '=========================================='
-		PRINT 'ERROR OCCURED DURING LOADING BRONZE LAYER'
-		PRINT 'Error Message' + ERROR_MESSAGE();
-		PRINT 'Error Message' + CAST (ERROR_NUMBER() AS NVARCHAR);
-		PRINT 'Error Message' + CAST (ERROR_STATE() AS NVARCHAR);
-		PRINT '=========================================='
+	    PRINT '==========================================';
+	    PRINT 'ERROR OCCURRED DURING LOADING SILVER LAYER';
+	    PRINT 'Error Message: ' + ERROR_MESSAGE();
+	    PRINT 'Error Number: ' + CAST(ERROR_NUMBER() AS NVARCHAR);
+	    PRINT 'Error State: ' + CAST(ERROR_STATE() AS NVARCHAR);
+	    PRINT '==========================================';
 	END CATCH
 END
