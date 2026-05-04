@@ -9,19 +9,6 @@ The goal is not only to load data, but also to improve data quality before it is
 
 ![Data Warehouse Architecture](docs/architecture.png)
 
-```text
-Source CSV Files
-      |
-      v
-Bronze Layer  -> Raw data ingestion
-      |
-      v
-Silver Layer  -> Data cleaning and standardization
-      |
-      v
-Gold Layer    -> Business-ready analytical model
-```
-
 ### Why Bronze / Silver / Gold?
 
 I used this architecture to separate the pipeline into clear responsibilities:
@@ -40,7 +27,7 @@ This makes the pipeline easier to debug, validate, and explain.
 
 The Bronze layer loads raw CRM and ERP CSV files into SQL Server while keeping the original source structure.
 
-Example tables:
+Tables:
 
 - `bronze.crm_cust_info`
 - `bronze.crm_prd_info`
@@ -71,23 +58,19 @@ The Gold layer provides analytical views using a star schema.
 
 ![Star Schema](docs/star_schema.png)
 
-| View | Type | Description |
-|---|---|---|
-| `gold.dim_customers` | Dimension | Customer profile with demographic and location data |
-| `gold.dim_products` | Dimension | Product details with category information |
-| `gold.fact_sales` | Fact | Sales transactions linked to customers and products |
-
 ## Data Quality Issues Handled
 
 This project handles several practical data quality issues:
 
-- Keeps the latest customer record when duplicates exist
-- Standardizes values such as `M`, `F`, `S`, and `M` into readable labels
+- Keeps the latest customer record when duplicate customer records exist
+- Removes unnecessary spaces from text fields
+- Standardizes gender values such as `M` and `F` into `Male` and `Female`
+- Standardizes marital status values such as `S` and `M` into `Single` and `Married`
 - Converts raw date values into SQL `DATE` format
 - Splits product keys into category ID and product number
-- Recalculates sales and price values when source values are inconsistent
-- Standardizes ERP country and gender values
-- Validates Gold layer relationships between fact and dimension views
+- Recalculates sales and price values when source values are missing or inconsistent
+- Standardizes ERP country and demographic values
+- Validates relationships between fact and dimension views in the Gold layer
 
 ## Repository Structure
 
@@ -135,15 +118,11 @@ sql-data-warehouse/
 
 1. Run database initialization script:
 
-```sql
-scripts/init_database.sql
-```
+`scripts/init_database.sql`
 
 2. Create Bronze tables:
 
-```sql
-scripts/bronze/ddl_bronze.sql
-```
+`scripts/bronze/ddl_bronze.sql`
 
 3. Load data into Bronze:
 
@@ -154,9 +133,7 @@ EXEC bronze.load_bronze
 
 4. Create Silver tables:
 
-```sql
-scripts/silver/ddl_silver.sql
-```
+`scripts/silver/ddl_silver.sql`
 
 5. Load data into Silver:
 
@@ -166,15 +143,11 @@ EXEC silver.load_silver;
 
 6. Create Gold views:
 
-```sql
-scripts/gold/ddl_gold.sql
-```
+`scripts/gold/ddl_gold.sql`
 
 7. Run quality checks:
 
-```sql
-tests/quality_checks_gold.sql
-```
+`tests/quality_checks_gold.sql`
 
 Expected data folder structure:
 
